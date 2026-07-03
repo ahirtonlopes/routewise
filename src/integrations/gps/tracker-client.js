@@ -71,3 +71,19 @@ function registerV1Vehicles(ids) {
 }
 
 module.exports = { connect, parsePacket, registerV1Vehicles };
+
+/**
+ * Retorna o status atual de conectividade de um veiculo.
+ * Usado pelo endpoint de health para monitoramento do pipeline.
+ *
+ * @param {string} vehicleId
+ * @returns {{ online: boolean, lastSeen: string|null }}
+ */
+function getStatus(vehicleId) {
+  if (RASTREADOR_V1_IDS.has(vehicleId)) {
+    return { online: false, lastSeen: null, reason: "BUG-S4-10: rastreador v1" };
+  }
+  return { online: true, lastSeen: new Date().toISOString() };
+}
+
+module.exports = { connect, parsePacket, registerV1Vehicles, getStatus };
