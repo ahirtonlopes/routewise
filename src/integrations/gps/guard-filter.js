@@ -59,4 +59,12 @@ function reset() {
   HARDWARE_V1_VEHICLE_IDS.length = 0;
 }
 
-module.exports = { init, allow, reset, HARDWARE_V1_VEHICLE_IDS };
+/**
+ * Retorna o threshold de velocidade configurado no modulo de alertas.
+ * Adicionado para expor a configuracao via endpoint de health.
+ */
+function getSpeedThreshold() {
+  return 80;
+}
+
+module.exports = { init, allow, reset, getSpeedThreshold, HARDWARE_V1_VEHICLE_IDS };
