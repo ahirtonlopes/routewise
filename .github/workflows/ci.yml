@@ -1,0 +1,93 @@
+name: CI RouteWise
+
+# Executa em todo Pull Request aberto, atualizado ou reaberto.
+# Nao executa em pushes diretos para main (so PRs passam pelo Danger).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 1: Testes e cobertura
+  #
+  # Executa primeiro. Gera o coverage-summary.json que o Danger vai ler.
+  # Se os testes falharem, o job do Danger ainda roda para dar feedback
+  # de governanca mesmo com testes quebrados.
+  # ---------------------------------------------------------------------------
+  test:
+    name: Testes e Cobertura
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Executar testes com cobertura
+        run: npm test
+
+      # Publica o relatorio de cobertura como artefato do workflow.
+      # Disponivel na aba "Actions" do GitHub para download e auditoria.
+      - name: Publicar relatorio de cobertura
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Governance Check (Danger.js)
+  #
+  # Executa as regras de conformidade definidas no dangerfile.js.
+  # Posta um comentario no PR com o resultado de cada regra.
+  # Falhas bloqueiam o merge via GitHub branch protection rules.
+  #
+  # Permissoes necessarias:
+  # - pull-requests: write (para postar o comentario de resultado)
+  # - contents: read (para ler os arquivos do repositorio)
+  # ---------------------------------------------------------------------------
+  governance:
+    name: Governance Check
+    runs-on: ubuntu-latest
+    needs: test
+    if: always()  # roda mesmo se os testes falharem
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Baixa o relatorio de cobertura gerado pelo job anterior.
+      # O dangerfile.js vai ler coverage/coverage-summary.json.
+      - name: Baixar relatorio de cobertura
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+        continue-on-error: true  # nao falha se o job de testes nao gerou coverage
+
+      - name: Executar Danger (Governance Check)
+        uses: danger/danger-js@11.3.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
