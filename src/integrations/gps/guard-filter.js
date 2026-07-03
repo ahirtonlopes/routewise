@@ -51,4 +51,12 @@ function allow(packet) {
   return { allowed: true };
 }
 
-module.exports = { init, allow, HARDWARE_V1_VEHICLE_IDS };
+/**
+ * Reseta a lista de veiculos v1 (uso em testes).
+ * Nao usar em producao.
+ */
+function reset() {
+  HARDWARE_V1_VEHICLE_IDS.length = 0;
+}
+
+module.exports = { init, allow, reset, HARDWARE_V1_VEHICLE_IDS };

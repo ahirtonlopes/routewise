@@ -26,10 +26,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
       - name: Executar testes com cobertura
         run: npm test
@@ -73,10 +72,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm install
 
       # Baixa o relatorio de cobertura gerado pelo job anterior.
       # O dangerfile.js vai ler coverage/coverage-summary.json.
